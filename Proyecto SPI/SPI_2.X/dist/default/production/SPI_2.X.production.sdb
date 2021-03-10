@@ -1,0 +1,24 @@
+[p GLOBOPT AUTOSTATIC IEEE_DBL IEEE_FLT PIC14 PICREGULAR PICMID ]
+[d version 1.1 ]
+[d edition pro ]
+[d chip 16F887 ]
+[d frameptr 0 ]
+"10 C:\Program Files\Microchip\xc8\v2.31\pic\sources\c90\common\sprcadd.c
+[v ___fladd __fladd `(d  1 e 4 0 ]
+"4 C:\Program Files\Microchip\xc8\v2.31\pic\sources\c90\common\Umul8_16.c
+[v __Umul8_16 _Umul8_16 `(ui  1 e 2 0 ]
+"6 C:\Program Files\Microchip\xc8\v2.31\pic\sources\c90\pic\__eeprom.c
+[v ___eecpymem __eecpymem `(v  1 e 1 0 ]
+"39
+[v ___memcpyee __memcpyee `(v  1 e 1 0 ]
+"22 C:\Users\diegu\OneDrive\Documents\universidad\Labs_digital\Proyecto SPI\SPI_2.X\i2c_main.c
+[v _main main `(v  1 e 1 0 ]
+"4139 C:/Program Files/Microchip/MPLABX/v5.45/packs/Microchip/PIC16Fxxx_DFP/1.2.33/xc8\pic\include\proc\pic16f887.h
+[v _RC2 RC2 `VEb  1 e 0 @58 ]
+"4454
+[v _TRISC2 TRISC2 `VEb  1 e 0 @1082 ]
+"22 C:\Users\diegu\OneDrive\Documents\universidad\Labs_digital\Proyecto SPI\SPI_2.X\i2c_main.c
+[v _main main `(v  1 e 1 0 ]
+{
+"34
+} 0
