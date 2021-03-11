@@ -1,0 +1,26 @@
+palabras de configuración
+
+****decraracion de variables********
+****declaracion de funciones******
+se declaran las funciones de 
+-mpu
+-i2c
+-uart
+*****configuracion********
+canfiguramos las salidas y entradas
+iniciamos la comunicacion uart (RX y TX)
+iniciamos la comunicación i2c
+iniciamos el mpu6050
+*****loop*******
+leemos los valores de mpu6050
+mandamos cada variable por uart 
+	en nuestro caso solo nos concentraremos en los giroscopios y se envia por uart
+Leemos la entrada de serial 
+	dependiendo del valor de entrada encendemos los leds correspondientes
+*****************************************************
+MPU6050
+
+incluimos las traducciones de registro
+realizamos el algoritmo de inicialización para que nos muestre los valores del giroscopio
+leemos cada 8 valores la comunicación i2c y los guardamos cadauno en su respectiva valiable que sera enviada por uart al modulo esp32
+*****************************************
