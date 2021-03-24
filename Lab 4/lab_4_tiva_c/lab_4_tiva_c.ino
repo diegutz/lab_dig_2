@@ -5,10 +5,10 @@
 #define PB1 3
 #define PB2 4
 #define PB3 5
-#define PB4 6
-#define PB5 7
-#define PB6 8
-#define PB7 9
+#define PB4 8
+#define PB5 9
+#define PB6 7
+#define PB7 6
 #define PE0 11
 #define PE1 12
 #define PE2 13
@@ -53,6 +53,30 @@ void loop() {
   }
   led1();
   led2();
+  if(cont1 == 7){
+    run = LOW;
+    iniciar = LOW;
+    digitalWrite(ledg,LOW);
+    delay(500);
+    digitalWrite(ledg,HIGH);
+    delay(500);
+    digitalWrite(ledg,LOW);
+    delay(500);
+    digitalWrite(ledg,HIGH);
+    delay(500);
+  }
+  if(cont2 == 7){
+    run = LOW;
+    iniciar = LOW;
+    digitalWrite(ledg,LOW);
+    delay(500);
+    digitalWrite(ledg,HIGH);
+    delay(500);
+    digitalWrite(ledg,LOW);
+    delay(500);
+    digitalWrite(ledg,HIGH);
+    delay(500);
+  }
   delay(50);
 }
 void blink() 
@@ -60,12 +84,16 @@ void blink()
     iniciar = HIGH;
     if (run == HIGH){
       cont1++;
+    port_b[cont1-1] = 0;
+    port_b[cont1] = 1;
     }
 }
 void blink2(){
   iniciar = HIGH;
   if (run == HIGH){
       cont2++;
+    port_e[cont2-1] = 0;
+    port_e[cont2] = 1;
     }
 }
 void led1(void){
