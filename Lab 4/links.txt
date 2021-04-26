@@ -1,0 +1,2 @@
+linkvideo:https://youtu.be/B30bLgzAbSc
+repositorio:github: https://github.com/diegutz/lab_dig_2
