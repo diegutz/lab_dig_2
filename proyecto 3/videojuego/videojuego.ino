@@ -1,11 +1,3 @@
-//***************************************************************************************************************************************
-/* Librería para el uso de la pantalla ILI9341 en modo 8 bits
- * Basado en el código de martinayotte - https://www.stm32duino.com/viewtopic.php?t=637
- * Adaptación, migración y creación de nuevas funciones: Pablo Mazariegos y José Morales
- * Con ayuda de: José Guerra
- * IE3027: Electrónica Digital 2 - 2019
- */
-//***************************************************************************************************************************************
 #include <stdint.h>
 #include <stdbool.h>
 #include <TM4C123GH6PM.h>
@@ -30,22 +22,20 @@
 #define LCD_WR PD_3
 #define LCD_RD PE_1
 int DPINS[] = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};  
-bool carril_1[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-bool carril_1_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool carril_2[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-bool carril_2_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool carril_3[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-bool carril_3_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool carril_4[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-bool carril_4_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool carril_5[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-bool carril_5_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-bool pos_nave[] = {0, 0, 0, 0, 0};
+int8_t  carril_1[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int8_t  carril_1_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int8_t  carril_2[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int8_t  carril_2_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int8_t  carril_3[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int8_t  carril_3_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int8_t  carril_4[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int8_t  carril_4_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int8_t  carril_5[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int8_t  carril_5_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int8_t  pos_nave[] = {0, 0, 0, 0, 0};
+bool jugando = 0;
+int tipo_nave = 0;
 int ran1 = 0;
-int ran2 = 0;
-int ran3 = 0;
-int ran4 = 0;
-int ran5 = 0;
 int cont = 0;
 int vida = 0;
 //***************************************************************************************************************************************
@@ -93,8 +83,10 @@ void setup() {
   //LCD_Bitmap(unsigned int x, unsigned int y, unsigned int width, unsigned int height, unsigned char bitmap[]);
   LCD_Bitmap(0, 0, 320, 240, fondo);
   
+
+    
+    H_line(0, 52, 300, 0xFF);
   for(int x = 0; x <319; x++){
-    LCD_Bitmap(x, 52, 16, 16, tile2);
     
     LCD_Bitmap(x, 223, 16, 16, tile);
     x += 15;
@@ -106,7 +98,18 @@ void setup() {
 // Loop Infinito
 //***************************************************************************************************************************************
 void loop() {
+  vida = 0;
+  if(tipo_nave == 0){
+    
+    LCD_Sprite(286, 70, 32,32,x_wing, 4, vida, 0, 0);
+    }
+  
+  if(tipo_nave == 1){
 
+    LCD_Sprite(286, 70, 32,32,halcon_milenario, 4, vida, 0, 0);
+  }
+  while(jugando == 1){
+//----------------------------------------mueve el estado de los proyectiles para generar movimiento----------------------------
   for(int i =0;i < 19; i++){
     carril_1_temp[i] = carril_1[i-1];
     carril_2_temp[i] = carril_2[i-1];
@@ -121,7 +124,7 @@ void loop() {
     carril_4[i] = carril_4_temp[i];
     carril_5[i] = carril_5_temp[i];
   }
-  
+  //-----------------------------------------------vidas del jugador---------------------------------------
   if(carril_1[18]==1 && cont == 0){
     vida++;
   }
@@ -137,72 +140,88 @@ void loop() {
   if(carril_5[18]==1 && cont == 4){
     vida++;
   }
-  if(vida==0){
-  digitalWrite(GREEN_LED,HIGH);
+  if(vida==4){
+  jugando = 0;
   }
-  if(vida==1){
-  digitalWrite(RED_LED,HIGH);
-  }
-  if(vida==2){
-  digitalWrite(GREEN_LED,LOW);
-  }
+  //----------------------------------------------generación automatica de enemigos-------------------------------------------------
   ran1 = random(0, 100);
-  ran2 = random(0, 100);
-  ran3 = random(0, 100);
-  ran4 = random(0, 100);
-  ran5 = random(0, 100);
   if (ran1 > 90 && carril_3[1] == 0){
     carril_1[0] = 1;
   }
-  if (ran2 > 90 && carril_2[1] == 0){
+  ran1 = random(0, 100);
+  if (ran1 > 90 && carril_2[1] == 0){
     carril_2[0] = 1;
   }
-  if (ran3 > 90 && carril_1[1] == 0){
+  ran1 = random(0, 100);
+  if (ran1 > 90 && carril_1[1] == 0){
     carril_3[0] = 1;
   }
-  if (ran4 > 90 && carril_4[1] == 0){
+  ran1 = random(0, 100);
+  if (ran1 > 90 && carril_4[1] == 0){
     carril_4[0] = 1;
   }
-  if (ran5 > 90 && carril_5[1] == 0){
+  ran1 = random(0, 100);
+  if (ran1 > 90 && carril_5[1] == 0){
     carril_5[0] = 1;
   }
-  
+
+  //-----------------------------------estado de los disparos---------------------------------------------
   for(int i =0;i < 18; i++){
-    if(carril_1[i] == 1){
-      LCD_Bitmap(i*16, 80, 16, 16, tile2);
-    }
-    if(carril_2[i] == 1){
-      LCD_Bitmap(i*16, 110, 16, 16, tile2);
-    }
-    if(carril_3[i] == 1){
-      LCD_Bitmap(i*16, 140, 16, 16, tile2);
-    }
-    if(carril_4[i] == 1){
-      LCD_Bitmap(i*16, 170, 16, 16, tile2);
-    }
-    if(carril_5[i] == 1){
-      LCD_Bitmap(i*16, 200, 16, 16, tile2);
-    }
-    if(carril_1[i] == 0){
+    switch (carril_1[i]) {
+  case 0:
     FillRect(i*16, 80, 16, 16, 0x00);
-    }
-    if(carril_2[i] == 0){
+    break;
+  case 1:
+      LCD_Bitmap(i*16, 80, 16, 16, tile2);
+    break;
+}
+    switch (carril_1[i]) {
+  case 0:
+    FillRect(i*16, 80, 16, 16, 0x00);
+    break;
+  case 1:
+      LCD_Bitmap(i*16, 80, 16, 16, tile2);
+    break;
+}
+    switch (carril_2[i]) {
+  case 0:
     FillRect(i*16, 110, 16, 16, 0x00);
-    }
-    if(carril_3[i] == 0){
+    break;
+  case 1:
+      LCD_Bitmap(i*16, 110, 16, 16, tile2);
+    break;
+}
+    switch (carril_3[i]) {
+  case 0:
     FillRect(i*16, 140, 16, 16, 0x00);
-    }
-    if(carril_4[i] == 0){
+    break;
+  case 1:
+      LCD_Bitmap(i*16, 140, 16, 16, tile2);
+    break;
+}
+    switch (carril_4[i]) {
+  case 0:
     FillRect(i*16, 170, 16, 16, 0x00);
-    }
-    if(carril_5[i] == 0){
+    break;
+  case 1:
+    LCD_Bitmap(i*16, 170, 16, 16, tile2);
+    break;
+}
+    switch (carril_5[i]) {
+  case 0:
     FillRect(i*16, 200, 16, 16, 0x00);
-    }
+    break;
+  case 1:
+      LCD_Bitmap(i*16, 200, 16, 16, tile2);
+    break;
+}
+  //----------------------------------------borrar nave para presentar el estado de la ultima fila----------------------------------------
+  //para mostrar disparos een la columna de la nave pimero es necesario borrar la nave  
   }
   for(int i =0;i < 5; i++){
     FillRect(286, 70 + (i*30), 32, 32, 0x00);
     }
-    
+    //----------------------------------------se generan los disparos en la columna del jugador-------------------------
     if(carril_1[18] == 1){
       LCD_Bitmap(288, 80, 16, 16, tile2);
     }
@@ -233,13 +252,23 @@ void loop() {
     if(carril_5[18] == 0){
     FillRect(288, 200, 16, 16, 0x00);
     }
+
+    
 for(int i =0;i < 5; i++){
         if(i == cont){
-    LCD_Sprite(286, 70 + (i*30), 32,32,x_wing, 4, vida, 0, 0);
+            switch (tipo_nave) {
+          case 0:
+             LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
+          break;
+          case 1:
+            LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
+          break;
+}
         }
     }
   delay(400);
   }
+}
 //***************************************************************************************************************************************
 // Función botones
 //***************************************************************************************************************************************
@@ -250,11 +279,18 @@ if(cont > 0){
 }
 for(int i =0;i < 5; i++){
   FillRect(286, 70 + (i*30), 32, 32, 0x00);
-        if(i == cont){
-
-    LCD_Sprite(286, 70 + (i*30),32,32,x_wing, 4, vida, 0, 0);
+        if(i == cont && jugando==1){
+        switch (tipo_nave) {
+          case 0:
+             LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
+          break;
+          case 1:
+            LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
+          break;
+}
         }
     }
+    jugando = 1;
 }
 void blink2(){
   if(cont < 4){
@@ -262,8 +298,18 @@ void blink2(){
 }
 for(int i =0;i < 5; i++){
     FillRect(286, 70 + (i*30), 32, 32, 0x00);
-        if(i == cont){
-    LCD_Sprite(286, 70 + (i*30), 32,32,x_wing, 4, vida, 0, 0);
+    if(jugando == 0){
+    tipo_nave = !tipo_nave;
+    }
+        if(i == cont && jugando==1){
+      switch (tipo_nave) {
+  case 0:
+    LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
+    break;
+  case 1:
+    LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
+    break;
+}
         }
     }
 }
