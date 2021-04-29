@@ -22,22 +22,27 @@
 #define LCD_WR PD_3
 #define LCD_RD PE_1
 int DPINS[] = {PB_0, PB_1, PB_2, PB_3, PB_4, PB_5, PB_6, PB_7};  
-int8_t  carril_1[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int8_t  carril_1_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int8_t  carril_2[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int8_t  carril_2_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int8_t  carril_3[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int8_t  carril_3_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int8_t  carril_4[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int8_t  carril_4_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int8_t  carril_5[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int8_t  carril_5_temp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int8_t  pos_nave[] = {0, 0, 0, 0, 0};
-bool jugando = 0;
+int8_t  carril_1[19];
+int8_t  carril_1_temp[19];
+int8_t  carril_2[19];
+int8_t  carril_2_temp[19];
+int8_t  carril_3[19];
+int8_t  carril_3_temp[19];
+int8_t  carril_4[19];
+int8_t  carril_4_temp[19];
+int8_t  carril_5[19] ;
+int8_t  carril_5_temp[19];
+int jugando = 0; //0 = menu; 1= jugando ; 2= game over
 int tipo_nave = 0;
 int ran1 = 0;
 int cont = 0;
 int vida = 0;
+int buzzerPin = 40;
+volatile uint8_t cont_notas= 0;
+                      //0   1     2    3    4    5    6    7    8     9    10   11 12  13  14  15
+                      //do  do#   re   re#  mi   fa   fa# sol   sol#  la  la#  si ,do, re ,mib sol
+volatile int tonos[] = {261, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,523,587,612,789};
+volatile int notas[] = {7,7,7,3,10,7,3,10,7,13,13,13,14,10,8,14,10,7};
 //***************************************************************************************************************************************
 // Functions Prototypes
 //***************************************************************************************************************************************
@@ -51,6 +56,9 @@ void V_line(unsigned int x, unsigned int y, unsigned int l, unsigned int c);
 void Rect(unsigned int x, unsigned int y, unsigned int w, unsigned int h, unsigned int c);
 void FillRect(unsigned int x, unsigned int y, unsigned int w, unsigned int h, unsigned int c);
 void LCD_Print(String text, int x, int y, int fontSize, int color, int background);
+void desplegar_nave(int i);
+void clear_mapa(void);
+void fondo_estrella(void);
 
 void LCD_Bitmap(unsigned int x, unsigned int y, unsigned int width, unsigned int height, unsigned char bitmap[]);
 void LCD_Sprite(int x, int y, int width, int height, unsigned char bitmap[],int columns, int index, char flip, char offset);
@@ -66,31 +74,31 @@ void setup() {
   pinMode(GREEN_LED, OUTPUT);              //definimos las entradas y salidas
   pinMode(BLUE_LED, OUTPUT);              //definimos las entradas y salidas
   pinMode(RED_LED, OUTPUT);              //definimos las entradas y salidas
-  pinMode(PUSH1, INPUT_PULLUP);
-  pinMode(PUSH2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PUSH1), blink, FALLING); //iniciamos interrupcion 1 con flanco negativo
-  attachInterrupt(digitalPinToInterrupt(PUSH2), &blink2, FALLING); //iniciamos interrupcion 1 con flanco negativo
+  pinMode(PF_4, INPUT);
+  pinMode(PD_7, INPUT);
+  pinMode(PF_1, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(PF_4), blink, FALLING); //iniciamos interrupcion 1 con flanco negativo
+  attachInterrupt(digitalPinToInterrupt(PD_7), &blink2, FALLING); //iniciamos interrupcion 1 con flanco negativo
+  attachInterrupt(digitalPinToInterrupt(PF_1), &blink3, FALLING); //iniciamos interrupcion 1 con flanco negativo
   GPIOPadConfigSet(GPIO_PORTB_BASE, 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
   Serial.println("Inicio");
   LCD_Init();
+  configureTimer1A();     //iniciamos protocolo de interrupcion
   LCD_Clear(0x0F);
   
+  clear_mapa();
+  
   FillRect(0, 0, 319, 206, 0x421b);
-  String text1 = "Super Mario World!";
+  String text1 = "starwars arcade";
   LCD_Print(text1, 20, 100, 2, 0xffff, 0x421b);
 //LCD_Sprite(int x, int y, int width, int height, unsigned char bitmap[],int columns, int index, char flip, char offset);
     
   //LCD_Bitmap(unsigned int x, unsigned int y, unsigned int width, unsigned int height, unsigned char bitmap[]);
-  LCD_Bitmap(0, 0, 320, 240, fondo);
-  
-
-    
+  //LCD_Bitmap(0, 0, 320, 240, fondo);
+  fondo_estrella();   
     H_line(0, 52, 300, 0xFF);
-  for(int x = 0; x <319; x++){
-    
-    LCD_Bitmap(x, 223, 16, 16, tile);
-    x += 15;
- }
+  
         
     
 }
@@ -98,15 +106,18 @@ void setup() {
 // Loop Infinito
 //***************************************************************************************************************************************
 void loop() {
+  while(jugando==0){
   vida = 0;
+  clear_mapa();
   if(tipo_nave == 0){
     
-    LCD_Sprite(286, 70, 32,32,x_wing, 4, vida, 0, 0);
+    LCD_Sprite(286, 70, 32,32,x_wing, 3, vida, 0, 0);
     }
   
   if(tipo_nave == 1){
 
-    LCD_Sprite(286, 70, 32,32,halcon_milenario, 4, vida, 0, 0);
+    LCD_Sprite(286, 70, 32,32,halcon_milenario, 3, vida, 0, 0);
+  }
   }
   while(jugando == 1){
 //----------------------------------------mueve el estado de los proyectiles para generar movimiento----------------------------
@@ -140,8 +151,8 @@ void loop() {
   if(carril_5[18]==1 && cont == 4){
     vida++;
   }
-  if(vida==4){
-  jugando = 0;
+  if(vida==3){
+  jugando = 2;
   }
   //----------------------------------------------generación automatica de enemigos-------------------------------------------------
   ran1 = random(0, 100);
@@ -169,15 +180,7 @@ void loop() {
   for(int i =0;i < 18; i++){
     switch (carril_1[i]) {
   case 0:
-    FillRect(i*16, 80, 16, 16, 0x00);
-    break;
-  case 1:
-      LCD_Bitmap(i*16, 80, 16, 16, tile2);
-    break;
-}
-    switch (carril_1[i]) {
-  case 0:
-    FillRect(i*16, 80, 16, 16, 0x00);
+    LCD_Sprite(i*16, 80, 20,20,estrella, 1, 0, 0, 0);
     break;
   case 1:
       LCD_Bitmap(i*16, 80, 16, 16, tile2);
@@ -185,7 +188,7 @@ void loop() {
 }
     switch (carril_2[i]) {
   case 0:
-    FillRect(i*16, 110, 16, 16, 0x00);
+    LCD_Sprite(i*16, 110, 20,20,estrella, 1, 0, 0, 0);
     break;
   case 1:
       LCD_Bitmap(i*16, 110, 16, 16, tile2);
@@ -193,7 +196,7 @@ void loop() {
 }
     switch (carril_3[i]) {
   case 0:
-    FillRect(i*16, 140, 16, 16, 0x00);
+    LCD_Sprite(i*16, 140, 20,20,estrella, 1, 0, 0, 0);
     break;
   case 1:
       LCD_Bitmap(i*16, 140, 16, 16, tile2);
@@ -201,7 +204,7 @@ void loop() {
 }
     switch (carril_4[i]) {
   case 0:
-    FillRect(i*16, 170, 16, 16, 0x00);
+    LCD_Sprite(i*16, 170, 20,20,estrella, 1, 0, 0, 0);
     break;
   case 1:
     LCD_Bitmap(i*16, 170, 16, 16, tile2);
@@ -209,7 +212,7 @@ void loop() {
 }
     switch (carril_5[i]) {
   case 0:
-    FillRect(i*16, 200, 16, 16, 0x00);
+    LCD_Sprite(i*16, 200, 20,20,estrella, 1, 0, 0, 0);
     break;
   case 1:
       LCD_Bitmap(i*16, 200, 16, 16, tile2);
@@ -255,18 +258,21 @@ void loop() {
 
     
 for(int i =0;i < 5; i++){
-        if(i == cont){
-            switch (tipo_nave) {
-          case 0:
-             LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
-          break;
-          case 1:
-            LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
-          break;
-}
-        }
+        desplegar_nave(i);
     }
+  tone(buzzerPin, tonos[notas[cont_notas]], 100);
   delay(400);
+  noTone(buzzerPin); 
+  cont_notas++;
+  if(cont_notas == 17){
+    cont_notas =0;
+  }
+  }
+  while(jugando == 2){
+    LCD_Bitmap(0, 0, 320, 240, fondo);
+    delay(5000);
+    fondo_estrella();   
+    jugando = 0;
   }
 }
 //***************************************************************************************************************************************
@@ -279,18 +285,8 @@ if(cont > 0){
 }
 for(int i =0;i < 5; i++){
   FillRect(286, 70 + (i*30), 32, 32, 0x00);
-        if(i == cont && jugando==1){
-        switch (tipo_nave) {
-          case 0:
-             LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
-          break;
-          case 1:
-            LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
-          break;
-}
-        }
+        desplegar_nave(i);
     }
-    jugando = 1;
 }
 void blink2(){
   if(cont < 4){
@@ -301,17 +297,11 @@ for(int i =0;i < 5; i++){
     if(jugando == 0){
     tipo_nave = !tipo_nave;
     }
-        if(i == cont && jugando==1){
-      switch (tipo_nave) {
-  case 0:
-    LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 4, vida, 0, 0);
-    break;
-  case 1:
-    LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 4, vida, 0, 0);
-    break;
-}
-        }
+      desplegar_nave(i); 
     }
+}
+void blink3(){
+    jugando = 1;
 }
 //***************************************************************************************************************************************
 // Función para inicializar LCD
@@ -421,6 +411,23 @@ void LCD_Init(void) {
   delay(120);
   LCD_CMD(ILI9341_DISPON);    //Display on
   digitalWrite(LCD_CS, HIGH);
+}
+
+//***************************************************************************************************************************************
+// Función iniciar timer 1
+//***************************************************************************************************************************************
+void configureTimer1A(){
+  ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // iniciamos el clock del timar
+  ROM_IntMasterEnable();                            //permitimos las interrupciones
+  ROM_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC); // configuramos el periodo de trabajo  
+  // La configuracion de los hrz requeridos cambia segun el cristal de oscilacion 
+  // en la tiva c por ejemplo si uno quiere un periodo de 1 HZ el custom value deve ser de 8Millosnes para que 8Mhz/8M = 1hz
+  ROM_TimerLoadSet(TIMER1_BASE, TIMER_A, 4000000); // en este caso se utilizaraun custom value de 80000 para que sea 100hz
+
+  TimerIntRegister(TIMER1_BASE, TIMER_A, &Timer1AHandler); //se inicia el prototipo de funcion 
+  ROM_IntEnable(INT_TIMER1A);  // Enable Timer 1A Interrupt
+  ROM_TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Timer 1A Interrupt when Timeout
+  ROM_TimerEnable(TIMER1_BASE, TIMER_A); // Start Timer 1A
 }
 //***************************************************************************************************************************************
 // Función para enviar comandos a la LCD - parámetro (comando)
@@ -662,4 +669,54 @@ void LCD_Sprite(int x, int y, int width, int height, unsigned char bitmap[],int 
     
     }
   digitalWrite(LCD_CS, HIGH);
+}
+
+
+//***************************************************************************************************************************************
+// Función para desplegar la nave en la pocision deseada
+//***************************************************************************************************************************************
+void desplegar_nave(int i){
+  if(i == cont && jugando==1)
+        switch (tipo_nave) {
+          case 0:
+             LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 3, vida, 0, 0);
+          break;
+          case 1:
+            LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 3, vida, 0, 0);
+          break;
+}     
+}
+
+//***************************************************************************************************************************************
+// funcion que limpia el mapa de los disparos
+//***************************************************************************************************************************************
+
+void clear_mapa(void){
+     for(int i =0;i < 19; i++){
+    carril_1_temp[i] = 0;
+    carril_2_temp[i] = 0;
+    carril_3_temp[i] = 0;
+    carril_4_temp[i] =0;
+    carril_5_temp[i] = 0;
+    carril_1[i] = 0;
+    carril_2[i] = 0;
+    carril_3[i] = 0;
+    carril_4[i] = 0;
+    carril_5[i] = 0;
+  }
+}
+
+void Timer1AHandler(void){
+  ROM_TimerIntClear(TIMER1_BASE, TIMER_A);
+}
+
+void fondo_estrella(void){
+  FillRect(0, 0, 320, 240, 0x00);
+  for(int x = 0; x<240 ; x++){
+  for(int i=0;i < 320;i++){
+    LCD_Sprite(i, x, 20,20,estrella, 1, 0, 0, 0);
+    i=i+19;
+  };
+  x = x+19;
+  };
 }
