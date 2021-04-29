@@ -32,17 +32,23 @@ int8_t  carril_4[19];
 int8_t  carril_4_temp[19];
 int8_t  carril_5[19] ;
 int8_t  carril_5_temp[19];
-int jugando = 0; //0 = menu; 1= jugando ; 2= game over
+int jugando = 0; //0 = menu; 1= jugando ; 2= game over | 3 = ganaste
 int tipo_nave = 0;
 int ran1 = 0;
 int cont = 0;
 int vida = 0;
+int pos_star = 0;
+int sel_nave =0; //0 = x_wing | 1 = halcon milenario
 int buzzerPin = 40;
 volatile uint8_t cont_notas= 0;
-                      //0   1     2    3    4    5    6    7    8     9    10   11 12  13  14  15
-                      //do  do#   re   re#  mi   fa   fa# sol   sol#  la  la#  si ,do, re ,mib sol
-volatile int tonos[] = {261, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,523,587,612,789};
+volatile uint8_t cont_notas_loss= 0;
+volatile uint8_t cont_notas_win= 0;
+                      //0   1     2    3    4    5    6    7    8     9    10   11 12  13  14  15   16
+                      //do  do#   re   re#  mi   fa   fa# sol   sol#  la  la#  si ,do, re ,mib, sol, sol3
+volatile int tonos[] = {261, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,523,587,612,789, 196};
 volatile int notas[] = {7,7,7,3,10,7,3,10,7,13,13,13,14,10,8,14,10,7};
+volatile int perder[] = {1,7,4,9,11,9,8,10,8,4,2,4};
+volatile int ganar[] = {16,0,2,3,5,3,16,16,0,2,4,16,3,0,9,5};
 //***************************************************************************************************************************************
 // Functions Prototypes
 //***************************************************************************************************************************************
@@ -106,20 +112,47 @@ void setup() {
 // Loop Infinito
 //***************************************************************************************************************************************
 void loop() {
-  while(jugando==0){
+  while(jugando==0){      //70-100
+    
   vida = 0;
   clear_mapa();
-  if(tipo_nave == 0){
-    
-    LCD_Sprite(286, 70, 32,32,x_wing, 3, vida, 0, 0);
+  LCD_Sprite(286, 70, 32,32,x_wing, 3, vida, 0, 0);
+  LCD_Sprite(286, 100, 32,32,halcon_milenario, 3, vida, 0, 0);
+//  LCD_Sprite(286, 130, 32,32,a_wing, 3, vida, 0, 0);
+  FillRect(40, 70, 200, 190, 0x00);
+  if(cont == 0){
+  String text1 = "----------->";
+  LCD_Print(text1, 40, 80, 2, 0xffff, 0x421b);
+  sel_nave =0;
     }
-  
-  if(tipo_nave == 1){
-
-    LCD_Sprite(286, 70, 32,32,halcon_milenario, 3, vida, 0, 0);
+  if(cont == 1){      //100-130
+  String text1 = "----------->";
+  LCD_Print(text1, 40, 110, 2, 0xffff, 0x421b);
+  sel_nave =1;
   }
+  if(cont == 2){      //130-160
+  String text1 = "----------->";
+  LCD_Print(text1, 40, 140, 2, 0xffff, 0x421b);
+  sel_nave =2;
+  }
+  if(cont == 3){      //160-190
+  String text1 = "----------->";
+  LCD_Print(text1, 40, 170, 2, 0xffff, 0x421b);
+  }
+  if(cont == 4){      //190
+  String text1 = "----------->";
+  LCD_Print(text1, 40, 200, 2, 0xffff, 0x421b);
+  }
+  
+  delay(150);
   }
   while(jugando == 1){
+    
+    LCD_Sprite(pos_star, 0, 48,48,death_star, 1, 0, 0, 0);
+    pos_star = pos_star+4;
+    if(pos_star > 280){
+      jugando = 3;
+    }
 //----------------------------------------mueve el estado de los proyectiles para generar movimiento----------------------------
   for(int i =0;i < 19; i++){
     carril_1_temp[i] = carril_1[i-1];
@@ -270,9 +303,36 @@ for(int i =0;i < 5; i++){
   }
   while(jugando == 2){
     LCD_Bitmap(0, 0, 320, 240, fondo);
-    delay(5000);
+    while(cont_notas_loss < 12){
+      tone(buzzerPin, tonos[perder[cont_notas_loss]], 200);
+      delay(400);
+      noTone(buzzerPin); 
+      cont_notas_loss++;
+    }
     fondo_estrella();   
     jugando = 0;
+    cont_notas_loss = 0;
+    cont_notas_win = 0;
+    pos_star = 0;
+  }
+  while(jugando == 3){
+    fondo_estrella(); 
+  LCD_Sprite(100, 100, 32,32,x_wing, 3, 0, 0, 0);
+  LCD_Sprite(140, 150, 32,32,halcon_milenario, 3, 0, 0, 0);
+  //LCD_Sprite(100, 180, 32,32,a_wing, 3, 0, 0, 0);
+  LCD_Sprite(140, 70, 48,72,medalla, 1, 0, 0, 0);
+    while(cont_notas_win < 17){
+      tone(buzzerPin, tonos[ganar[cont_notas_win]], 400);
+      delay(500);
+      noTone(buzzerPin); 
+      cont_notas_win++;
+    }
+
+    fondo_estrella();   
+    jugando = 0;
+    pos_star = 0;
+    cont_notas_loss = 0;
+    cont_notas_win = 0;
   }
 }
 //***************************************************************************************************************************************
@@ -301,6 +361,10 @@ for(int i =0;i < 5; i++){
     }
 }
 void blink3(){
+  if(jugando==0){
+  FillRect(0, 0, 320, 240, 0x00);
+    fondo_estrella();
+  }
     jugando = 1;
 }
 //***************************************************************************************************************************************
@@ -677,13 +741,16 @@ void LCD_Sprite(int x, int y, int width, int height, unsigned char bitmap[],int 
 //***************************************************************************************************************************************
 void desplegar_nave(int i){
   if(i == cont && jugando==1)
-        switch (tipo_nave) {
+        switch (sel_nave) {
           case 0:
              LCD_Sprite(286, 70+ (i*30), 32,32,x_wing, 3, vida, 0, 0);
           break;
           case 1:
             LCD_Sprite(286, 70+ (i*30), 32,32,halcon_milenario, 3, vida, 0, 0);
-          break;
+          break;/*
+          case 2:
+            LCD_Sprite(286, 70+ (i*30), 32,32, a_wing, 3, vida, 0, 0);
+          break;*/
 }     
 }
 
@@ -718,5 +785,6 @@ void fondo_estrella(void){
     i=i+19;
   };
   x = x+19;
+  delay(5);
   };
 }
