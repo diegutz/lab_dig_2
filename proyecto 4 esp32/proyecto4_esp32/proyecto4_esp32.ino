@@ -1,8 +1,20 @@
+/* Alumno: Diego Gonzalez López
+ * Carnet: 15700 
+ * proyecto 4 Webserver
+ * Documento: proyecto 4 esp32 programación
+ * 
+ * Creador original del programa: Rui Santos
+ * 
+  Complete project details at https://randomnerdtutorials.com  
+  
+  Modificado para su uso por Diego Gonzalez
+ */
+
 #include <WiFi.h>
 
 // Replace with your network credentials
-const char* ssid = "Snicker";
-const char* password = "mi mascota actual";
+const char* ssid = "Snicker";                 //ingresamos nombre del wifi
+const char* password = "mi mascota actual";   //ingresamos la contraseña de wifi
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -10,7 +22,7 @@ WiFiServer server(80);
 // Variable to store the HTTP request
 String header;
 
-// Auxiliar variables to store the current output state
+// las variable para las salidas de los botones
 String output26State = "off";
 String output27State = "off";
 int entrada = 0;
@@ -21,9 +33,13 @@ String num2 = "2";
 String num1 = "1";
 String num0 = "0";
 
+//banderas para las salidas
 bool cont = 0;
+bool valpin1 = 0;
+bool valpin2 = 0;
+bool valpin3 = 0;
 
-// Assign output variables to GPIO pins
+// asignamos los valores de los pines a un nombre para un mejor manejo
 const int output26 = 26;
 const int output27 = 27;
 const int output0 = 14;
@@ -35,6 +51,9 @@ const int output5 = 16;
 const int output6 = 26;
 const int output7 = 27;
 const int outputdp = 4;
+const int inputpin1 = 32;
+const int inputpin2 = 35;
+const int inputpin3 = 34;
 //const int out_pin[] = {14, 18, 19, 2, 12, 16, 26, 27, 4};
 const int val_0[] = {1,1,1,1,1,1,0,1};
 const int val_1[] = {0,1,1,0,0,0,0,1};
@@ -49,8 +68,8 @@ unsigned long previousTime = 0;
 const long timeoutTime = 2000;
 
 void setup() {
-  Serial.begin(115200);
-  // Initialize the output variables as outputs
+  Serial.begin(115200);   
+  // inicializamos las salidas
   pinMode(output26, OUTPUT);
   pinMode(output27, OUTPUT);
   pinMode(output0, OUTPUT);
@@ -62,8 +81,13 @@ void setup() {
   pinMode(output6, OUTPUT);
   pinMode(output7, OUTPUT);
   pinMode(outputdp, OUTPUT);
-  // Set outputs to LOW
-  
+
+  //declaramos los pines como entradas
+  pinMode(inputpin1, INPUT);
+  pinMode(inputpin2, INPUT);
+  pinMode(inputpin3, INPUT);
+
+  //seteamos los pines a LOW
   digitalWrite(output26, LOW);
   digitalWrite(output27, LOW);
   digitalWrite(output0, LOW);
@@ -84,7 +108,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  // Print local IP address and start web server
+  // imprimimos la direccion serial
   Serial.println("");
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
@@ -93,7 +117,15 @@ void setup() {
 }
 
 void loop(){
-  if (entrada == 0){
+  //leemos los valores mandados de la tiva c
+  valpin1 = digitalRead(inputpin1);
+  valpin2 = digitalRead(inputpin2);
+  valpin3 = digitalRead(inputpin3);
+
+  //leemos las entradas de la tiva c y dependiendo de la secuencia encendemos los pines necesarios para mostrar los valores en el display de 7seg
+  //Tambien cambiamos el valor de la variable 'entrada' dependiendo del valor leido
+  //if (entrada == 0 ){
+  if (valpin1 == 0 && valpin2 == 0 && valpin3 == 0){
   digitalWrite(output26,HIGH);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
@@ -102,8 +134,10 @@ void loop(){
   digitalWrite(output0, HIGH);
   digitalWrite(output5, LOW);
   digitalWrite(outputdp,HIGH);
+  entrada = 0;
             }
-  else if(entrada == 1){
+ // else if(entrada == 1){
+    else if(valpin1 == 0 && valpin2 == 0 && valpin3 == 1){
   digitalWrite(output26,LOW);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
@@ -112,8 +146,10 @@ void loop(){
   digitalWrite(output0, LOW);
   digitalWrite(output5, LOW);
   digitalWrite(outputdp,HIGH);
+  entrada = 1;
             }
-  else if(entrada == 2){
+//  else if(entrada == 2){
+  else if(valpin1 == 0 && valpin2 == 1 && valpin3 == 0){
   digitalWrite(output26,HIGH);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, LOW);
@@ -122,8 +158,10 @@ void loop(){
   digitalWrite(output0, LOW);
   digitalWrite(output5, HIGH);
   digitalWrite(outputdp,HIGH);
+  entrada = 2;
             }
-  else if(entrada == 3){
+//  else if(entrada == 3){
+  else if(valpin1 == 0 && valpin2 == 1 && valpin3 == 1){
   digitalWrite(output26,HIGH);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
@@ -132,8 +170,10 @@ void loop(){
   digitalWrite(output0, LOW);
   digitalWrite(output5, HIGH);
   digitalWrite(outputdp,HIGH);
+  entrada = 3;
             }
-  else if(entrada == 4){
+//  else if(entrada == 4){
+  else if(valpin1 == 1 && valpin2 == 0 && valpin3 == 0){
   digitalWrite(output26,LOW);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
@@ -142,6 +182,7 @@ void loop(){
   digitalWrite(output0, HIGH);
   digitalWrite(output5, HIGH);
   digitalWrite(outputdp,HIGH);
+  entrada = 4;
             }
   else{
   digitalWrite(output26,HIGH);
@@ -153,8 +194,8 @@ void loop(){
   digitalWrite(output5, HIGH);
   digitalWrite(outputdp,HIGH);
             }
-  WiFiClient client = server.available();   // Listen for incoming clients
- if (Serial.available() > 0) {
+  WiFiClient client = server.available();   // leemos si hay cambios en la pagina
+ /*if (Serial.available() > 0) {
     // read the incoming byte:
     entrada = Serial.parseInt();
     rebote = Serial.parseInt();
@@ -176,17 +217,17 @@ void loop(){
             else{
     Serial.println("no hay entrada");
             }
-    }
-  if (client) {                             // If a new client connects,
+    }*/
+  if (client) {                             // si se conecta un cliente
     currentTime = millis();
     previousTime = currentTime;
-    Serial.println("New Client.");          // print a message out in the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected() && currentTime - previousTime <= timeoutTime) {  // loop while the client's connected
+    Serial.println("New Client.");          // imprimimos el mensaje que hay nuevo cliente
+    String currentLine = "";                // hacemos una variable para guardar la entrada
+    while (client.connected() && currentTime - previousTime <= timeoutTime) {  // empezamos un loop mientras el cliente este conectado
       currentTime = millis();
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
+      if (client.available()) {             // si hay variable que leer las leemos
+        char c = client.read();             // leemos el valor
+        Serial.write(c);                    // y lo imprimimos en serial
         header += c;
         if (c == '\n') {                    // if the byte is a newline character
           // if the current line is blank, you got two newline characters in a row.
@@ -198,7 +239,8 @@ void loop(){
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
-            
+
+            //Esta parte es por si queremos cambiar valores del programa atravez del servidor 
             // turns the GPIOs on and off
             if (header.indexOf("GET /26/on") >= 0) {
               Serial.println("GPIO 26 on");
@@ -218,7 +260,7 @@ void loop(){
               //digitalWrite(output27, LOW);
             }
             
-            // Display the HTML web page
+            // Desplegamos el codigo html
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
@@ -232,6 +274,8 @@ void loop(){
             client.println("<p><a href=\"/27/on\"><button class=\"button\">Refresh</button></a></p>");
             // Web Page Heading
             client.println("<body><h1>ESP32 Web Server</h1>");
+
+            //aqui se imprime el texto de los lugares ocupados dependiendo del valor de entrada
             if (entrada == 0){
               client.println("<p>NUMERO DE LUGARES OCUPADOS   " + num0 + "</p>");
             }

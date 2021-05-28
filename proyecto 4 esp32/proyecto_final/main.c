@@ -37,22 +37,31 @@ uint8_t parqueo_1;
 uint8_t parqueo_2;
 uint8_t parqueo_3;
 uint8_t parqueo_4;
+uint8_t cont_p1;
+uint8_t cont_p2;
+uint8_t cont_p3;
+uint8_t cont_p4;
+uint8_t cont_total;
 //********************************prototipos de funcion*******************************
 void Timer0Config(void);
 void InitUART(void);
 //************************************inicio Main**********************************************
 int main(void)
 {
-
+    //activamos la señal de reloj y la configuramos
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
-    //estas lineas configuran el reloj para que active el puerto F
+    //estas lineas configuran el reloj para que active los puertos a,e,f y c
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    //declaramos los pines que van a ser salidas y entradas
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+    GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4|GPIO_PIN_7|GPIO_PIN_6);
     GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_6|GPIO_PIN_7);
     GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);
     GPIOPinTypeGPIOInput(GPIO_PORTA_BASE,  GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);
+    //configuramos los botones para tener resistencias pull up internas
     GPIOPadConfigSet(GPIO_PORTA_BASE,GPIO_PIN_2,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
     GPIOPadConfigSet(GPIO_PORTA_BASE,GPIO_PIN_3,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
     GPIOPadConfigSet(GPIO_PORTA_BASE,GPIO_PIN_4,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
@@ -66,39 +75,86 @@ int main(void)
 //************esta vacio porque solo nos vamos a manejar con interrupciones*********************
     while(1)
     {
+        //leemos los botones y los guardamos en una variable
         parqueo_1 = GPIOPinRead(GPIO_PORTA_BASE,GPIO_PIN_2);
         parqueo_2 = GPIOPinRead(GPIO_PORTA_BASE,GPIO_PIN_3);
         parqueo_3 = GPIOPinRead(GPIO_PORTA_BASE,GPIO_PIN_4);
         parqueo_4 = GPIOPinRead(GPIO_PORTA_BASE,GPIO_PIN_5);
 
-        if( (parqueo_1 & GPIO_PIN_2)==0){  //lee si es que hay una g en la entrada de uart
-        GREEN = 1; //cambiamos el valor de la bandera
+        if( (parqueo_1 & GPIO_PIN_2)==0){  //leemos la entrada del parqueo
+        GREEN = 1;      //si el boton se preciona activa la bandera de sus leds correspondientes
+        cont_p1 = 1;    //si se presiona el boton se pone en uno la bandera para contar
             }
-        else{  //lee si es que hay una g en la entrada de uart
-        GREEN = 0; //cambiamos el valor de la bandera
-            }
-
-        if ((parqueo_2 & GPIO_PIN_3)==0){  //lee si es que hay una g en la entrada de uart
-        BLUE = 1; //cambiamos el valor de la bandera
-            }
-        else{  //lee si es que hay una g en la entrada de uart
-        BLUE = 0; //cambiamos el valor de la bandera
-            }
-        if( (parqueo_3 & GPIO_PIN_4)==0){  //lee si es que hay una g en la entrada de uart
-        RED = 1; //cambiamos el valor de la bandera
-            }
-        else{  //lee si es que hay una g en la entrada de uart
-        RED = 0; //cambiamos el valor de la bandera
+        else{
+        GREEN = 0;      //si el boton no se preciona se apaga la bandera de los led
+        cont_p1 = 0;    //si no se preciona el boton el contador del parqueo se pone en 0
             }
 
-        if ((parqueo_4 & GPIO_PIN_5)==0){  //lee si es que hay una g en la entrada de uart
-        cuatro = 1; //cambiamos el valor de la bandera
+        if ((parqueo_2 & GPIO_PIN_3)==0){    //leemos la entrada del parqueo
+        BLUE = 1;       //si el boton se preciona activa la bandera de sus leds correspondientes
+        cont_p2 = 1;    //si se presiona el boton se pone en uno la bandera para contar
             }
-        else{  //lee si es que hay una g en la entrada de uart
-        cuatro = 0; //cambiamos el valor de la bandera
+        else{
+        BLUE = 0;      //si el boton no se preciona se apaga la bandera de los led
+        cont_p2 = 0;    //si no se preciona el boton el contador del parqueo se pone en 0
             }
+        if( (parqueo_3 & GPIO_PIN_4)==0){    //leemos la entrada del parqueo
+        RED = 1;        //si el boton se preciona activa la bandera de sus leds correspondientes
+        cont_p3 = 1;    //si se presiona el boton se pone en uno la bandera para contar
+            }
+        else{
+        RED = 0;        //si el boton no se preciona se apaga la bandera de los led
+        cont_p3 = 0;    //si no se preciona el boton el contador del parqueo se pone en 0
+            }
+
+        if ((parqueo_4 & GPIO_PIN_5)==0){    //leemos la entrada del parqueo
+        cuatro = 1;     //si el boton se preciona activa la bandera de sus leds correspondientes
+        cont_p4 = 1;    //si se presiona el boton se pone en uno la bandera para contar
+            }
+        else{
+        cuatro = 0;     //si el boton no se preciona se apaga la bandera de los led
+        cont_p4 = 0;    //si no se preciona el boton el contador del parqueo se pone en 0
+            }
+
+        //se suma todos los contadores para saber cuantos parqueos estan ocupados
+        cont_total = cont_p1 + cont_p2 + cont_p3 + cont_p4;
+
+        //leemos el contador de parqueos y encendemos los pines necesarios para comunicarse con el esp32
+        //se manda una secuencia de 3 pines con un contador binario para que el esp sepa cuantos parqueos hay
+        if(cont_total == 0){
+            UARTCharPut(UART0_BASE,'0');
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
+        }
+        else if(cont_total == 1){
+            UARTCharPut(UART0_BASE,'1');
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, GPIO_PIN_6);
+        }
+        else if(cont_total == 2){
+            UARTCharPut(UART0_BASE,'2');
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, GPIO_PIN_7);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
+                }
+        else if(cont_total == 3){
+            UARTCharPut(UART0_BASE,'3');
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, GPIO_PIN_7);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, GPIO_PIN_6);
+                }
+        else if(cont_total == 4){
+            UARTCharPut(UART0_BASE,'4');
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, GPIO_PIN_4);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 0);
+            GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
+                }
     }
 }
+
+//configuracion del timer0
 void Timer0Config(void){
 
     uint32_t ui32Period;
@@ -119,7 +175,7 @@ void Timer0Config(void){
 
     TimerEnable(TIMER0_BASE, TIMER_A); // timers.
 }
-
+//inicializamos la comunicacion UART
 void InitUART(void){
 
 
