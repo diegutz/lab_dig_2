@@ -25,8 +25,13 @@ String header;
 // las variable para las salidas de los botones
 String output26State = "off";
 String output27State = "off";
+String estado_p1 = "off";
+String estado_p2 = "off";
+String estado_p3 = "off";
+String estado_p4 = "off";
 int entrada = 0;
 int rebote = 0;
+int suma = 0;
 String num4 = "4";
 String num3 = "3";
 String num2 = "2";
@@ -38,6 +43,7 @@ bool cont = 0;
 bool valpin1 = 0;
 bool valpin2 = 0;
 bool valpin3 = 0;
+bool valpin4 = 0;
 
 // asignamos los valores de los pines a un nombre para un mejor manejo
 const int output26 = 26;
@@ -54,6 +60,7 @@ const int outputdp = 4;
 const int inputpin1 = 32;
 const int inputpin2 = 35;
 const int inputpin3 = 34;
+const int inputpin4 = 39;
 //const int out_pin[] = {14, 18, 19, 2, 12, 16, 26, 27, 4};
 const int val_0[] = {1,1,1,1,1,1,0,1};
 const int val_1[] = {0,1,1,0,0,0,0,1};
@@ -86,6 +93,7 @@ void setup() {
   pinMode(inputpin1, INPUT);
   pinMode(inputpin2, INPUT);
   pinMode(inputpin3, INPUT);
+  pinMode(inputpin4, INPUT);
 
   //seteamos los pines a LOW
   digitalWrite(output26, LOW);
@@ -121,35 +129,63 @@ void loop(){
   valpin1 = digitalRead(inputpin1);
   valpin2 = digitalRead(inputpin2);
   valpin3 = digitalRead(inputpin3);
+  valpin4 = digitalRead(inputpin4);
 
+  if(valpin1 == 0){
+    estado_p1 = "LIBRE";
+  }
+  else if(valpin1 == 1){
+    estado_p1 = "OCUPADO";
+  }
+  if(valpin2 == 0){
+    estado_p2 = "LIBRE";
+  }
+  else if(valpin2 == 1){
+    estado_p2 = "OCUPADO";
+  }
+  if(valpin3 == 0){
+    estado_p3 = "LIBRE";
+  }
+  else if(valpin3 == 1){
+    estado_p3 = "OCUPADO";
+  }
+  if(valpin4 == 0){
+    estado_p4 = "LIBRE";
+  }
+  else if(valpin4 == 1){
+    estado_p4 = "OCUPADO";
+  }
+  suma = valpin1 + valpin2 + valpin3 + valpin4;
   //leemos las entradas de la tiva c y dependiendo de la secuencia encendemos los pines necesarios para mostrar los valores en el display de 7seg
   //Tambien cambiamos el valor de la variable 'entrada' dependiendo del valor leido
   //if (entrada == 0 ){
-  if (valpin1 == 0 && valpin2 == 0 && valpin3 == 0){
-  digitalWrite(output26,HIGH);
-  digitalWrite(output1, HIGH);
-  digitalWrite(output4, HIGH);
-  digitalWrite(output3, HIGH);
-  digitalWrite(output27,HIGH);
-  digitalWrite(output0, HIGH);
-  digitalWrite(output5, LOW);
-  digitalWrite(outputdp,HIGH);
-  entrada = 0;
-            }
- // else if(entrada == 1){
-    else if(valpin1 == 0 && valpin2 == 0 && valpin3 == 1){
+  if (suma == 0){
   digitalWrite(output26,LOW);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
   digitalWrite(output3, LOW);
   digitalWrite(output27,LOW);
-  digitalWrite(output0, LOW);
-  digitalWrite(output5, LOW);
+  digitalWrite(output0, HIGH);
+  digitalWrite(output5, HIGH);
   digitalWrite(outputdp,HIGH);
-  entrada = 1;
+  entrada = 4;
+  
+            }
+ // else if(entrada == 1){
+    else if(suma == 1){
+  
+  digitalWrite(output26,HIGH);
+  digitalWrite(output1, HIGH);
+  digitalWrite(output4, HIGH);
+  digitalWrite(output3, HIGH);
+  digitalWrite(output27,LOW);
+  digitalWrite(output0, LOW);
+  digitalWrite(output5, HIGH);
+  digitalWrite(outputdp,HIGH);
+  entrada = 3;
             }
 //  else if(entrada == 2){
-  else if(valpin1 == 0 && valpin2 == 1 && valpin3 == 0){
+  else if(suma == 2){
   digitalWrite(output26,HIGH);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, LOW);
@@ -161,63 +197,41 @@ void loop(){
   entrada = 2;
             }
 //  else if(entrada == 3){
-  else if(valpin1 == 0 && valpin2 == 1 && valpin3 == 1){
-  digitalWrite(output26,HIGH);
-  digitalWrite(output1, HIGH);
-  digitalWrite(output4, HIGH);
-  digitalWrite(output3, HIGH);
-  digitalWrite(output27,LOW);
-  digitalWrite(output0, LOW);
-  digitalWrite(output5, HIGH);
-  digitalWrite(outputdp,HIGH);
-  entrada = 3;
-            }
-//  else if(entrada == 4){
-  else if(valpin1 == 1 && valpin2 == 0 && valpin3 == 0){
+  else if(suma == 3){
   digitalWrite(output26,LOW);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
   digitalWrite(output3, LOW);
   digitalWrite(output27,LOW);
-  digitalWrite(output0, HIGH);
-  digitalWrite(output5, HIGH);
+  digitalWrite(output0, LOW);
+  digitalWrite(output5, LOW);
   digitalWrite(outputdp,HIGH);
-  entrada = 4;
+  entrada = 1;
             }
-  else{
+//  else if(entrada == 4){
+  else if(suma == 4){
   digitalWrite(output26,HIGH);
   digitalWrite(output1, HIGH);
   digitalWrite(output4, HIGH);
   digitalWrite(output3, HIGH);
   digitalWrite(output27,HIGH);
   digitalWrite(output0, HIGH);
-  digitalWrite(output5, HIGH);
+  digitalWrite(output5, LOW);
+  digitalWrite(outputdp,HIGH);
+  entrada = 0;
+            }
+  else{
+  digitalWrite(output26,LOW);
+  digitalWrite(output1, LOW);
+  digitalWrite(output4, LOW);
+  digitalWrite(output3, LOW);
+  digitalWrite(output27,LOW);
+  digitalWrite(output0, LOW);
+  digitalWrite(output5, LOW);
   digitalWrite(outputdp,HIGH);
             }
   WiFiClient client = server.available();   // leemos si hay cambios en la pagina
- /*if (Serial.available() > 0) {
-    // read the incoming byte:
-    entrada = Serial.parseInt();
-    rebote = Serial.parseInt();
-    if (entrada == 0){
-    Serial.println(entrada);
-            }
-            else if(entrada == 1){
-    Serial.println(entrada);
-            }
-            else if(entrada == 2){
-    Serial.println(entrada);
-            }
-            else if(entrada == 3){
-    Serial.println(entrada);
-            }
-            else if(entrada == 4){
-    Serial.println(entrada);
-            }
-            else{
-    Serial.println("no hay entrada");
-            }
-    }*/
+  
   if (client) {                             // si se conecta un cliente
     currentTime = millis();
     previousTime = currentTime;
@@ -277,20 +291,24 @@ void loop(){
 
             //aqui se imprime el texto de los lugares ocupados dependiendo del valor de entrada
             if (entrada == 0){
-              client.println("<p>NUMERO DE LUGARES OCUPADOS   " + num0 + "</p>");
+              client.println("<p>NUMERO DE LUGARES LIBRES   " + num0 + "</p>");
             }
             else if(entrada == 1){
-              client.println("<p>NUMERO DE LUGARES OCUPADOS  " + num1 + "</p>");
+              client.println("<p>NUMERO DE LUGARES LIBRES  " + num1 + "</p>");
             }
             else if(entrada == 2){
-              client.println("<p>NUMERO DE LUGARES OCUPADOS  " + num2 + "</p>");
+              client.println("<p>NUMERO DE LUGARES LIBRES  " + num2 + "</p>");
             }
             else if(entrada == 3){
-              client.println("<p>NUMERO DE LUGARES OCUPADOS  " + num3 + "</p>");
+              client.println("<p>NUMERO DE LUGARES LIBRES  " + num3 + "</p>");
             }
             else if(entrada == 4){
-              client.println("<p>NUMERO DE LUGARES OCUPADOS  " + num4 + "</p>");
+              client.println("<p>NUMERO DE LUGARES LIBRES  " + num4 + "</p>");
             }
+              client.println("<p>Parqueo1   " + estado_p1 + "</p>");
+              client.println("<p>Parqueo2   " + estado_p2 + "</p>");
+              client.println("<p>Parqueo3   " + estado_p3 + "</p>");
+              client.println("<p>Parqueo4   " + estado_p4 + "</p>");
             
             // Display current state, and ON/OFF buttons for GPIO 26  
 //            client.println("<p>GPIO 26 - State " + output26State + "</p>");
